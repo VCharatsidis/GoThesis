@@ -1,4 +1,4 @@
-package go;
+package BitMap;
 
 
 
@@ -25,14 +25,16 @@ public static void main(String[] args) {
 private void init() {
     JFrame f = new JFrame();
     f.setTitle(TITLE);
-
+    f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     JPanel container = new JPanel();
     container.setBackground(Color.GRAY);
     container.setLayout(new BorderLayout());
     f.add(container);
     container.setBorder(BorderFactory.createEmptyBorder(BORDER_SIZE, BORDER_SIZE, BORDER_SIZE, BORDER_SIZE));
-
-    GameBoard board = new GameBoard();
+    int height=7;
+    int width=7;
+    BitBoard startingboard = new BitBoard(height,width);
+    Renderer board = new Renderer(startingboard);
     container.add(board);
 
     f.pack();

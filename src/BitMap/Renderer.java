@@ -1,5 +1,6 @@
 package BitMap;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -9,6 +10,8 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 /**
@@ -23,7 +26,8 @@ private static final long serialVersionUID = -494530433694385328L;
 /**
  * Number of rows/columns.
  */
-public static final int SIZE = 9;
+public static final int SIZE=7;
+
 /**
  * Number of tiles in row/column. (Size - 1)
  */
@@ -40,60 +44,77 @@ public enum State {
     BLACK, WHITE
 }
 
-private State current_player;
-private Grid grid;
+private int height=7;
+private int width=7;
+private boolean current_player;
+private BitBoard board;
 private Point lastMove;
 
-public GameBoard() {
+public Renderer(BitBoard board) {
+	this.board = board;
     this.setBackground(Color.ORANGE);
-    grid = new Grid(SIZE);
+    
     // Black always starts
-    current_player = State.BLACK;
+    current_player = this.board.getTurn();
     
 
-    this.addMouseListener(new MouseAdapter() {
+    addListener(board);
+}
 
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            // Converts to float for float division and then rounds to
-            // provide nearest intersection.
-            int row = Math.round((float) (e.getY() - BORDER_SIZE)
-                    / TILE_SIZE);
-            int col = Math.round((float) (e.getX() - BORDER_SIZE)
-                    / TILE_SIZE);
+private class Mouse extends MouseAdapter{
+	@Override
+    
+    public void mouseReleased(MouseEvent e) {
+		
+        // Converts to float for float division and then rounds to
+        // provide nearest intersection.
+        int row = Math.round((float) (e.getY() - BORDER_SIZE)
+                / TILE_SIZE);
+        int col = Math.round((float) (e.getX() - BORDER_SIZE)
+                / TILE_SIZE);
 
-            // DEBUG INFO
-            // System.out.println(String.format("y: %d, x: %d", row, col));
+        // DEBUG INFO
+        // System.out.println(String.format("y: %d, x: %d", row, col));
 
-            // Check wherever it's valid
-            if (row >= SIZE || col >= SIZE || row < 0 || col < 0) {
-                return;
-            }
-
-            if (grid.isOccupied(row, col)) {
-                return;
-            }
-            grid.findNeighbors(row, col);
-            if (grid.isNotLegal(row, col,current_player)){
-            	System.out.print(" not legal");
-            	return;
-            	
-            }
-            System.out.println(" legal");
-            grid.test();
-            grid.addStone(row, col, current_player);
-            lastMove = new Point(col, row);
-
-            // Switch current player
-            if (current_player == State.BLACK) {
-                current_player = State.WHITE;
-            } else {
-                current_player = State.BLACK;
-            }
-            repaint();
-            
+        // Check wherever it's valid
+        if (row >= height || col >= width || row < 0 || col < 0) {
+            return;
         }
-    });
+           
+        //lastMove was after board.addStone
+       
+        board.addStone(row, col);
+        lastMove = new Point(col, row);
+        current_player =board.getTurn();
+        // Switch current player
+        repaint();
+        
+        
+    }
+}
+public static void drawBoard(BitBoard board){
+	JFrame f = new JFrame();
+    
+    f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    JPanel container = new JPanel();
+    container.setBackground(Color.GRAY);
+    container.setLayout(new BorderLayout());
+    f.add(container);
+    container.setBorder(BorderFactory.createEmptyBorder(BORDER_SIZE, BORDER_SIZE, BORDER_SIZE, BORDER_SIZE));
+    int height=7;
+    int width=7;
+   
+    Renderer drawboard = new Renderer(board);
+    container.add(drawboard);
+
+    f.pack();
+    f.setResizable(false);
+    f.setLocationByPlatform(true);
+    f.setVisible(true);
+}
+
+private void addListener(BitBoard board) {
+	addMouseListener(new Mouse());
 }
 
 @Override
@@ -118,9 +139,9 @@ protected void paintComponent(Graphics g) {
     // Iterate over intersections
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
-            State state = grid.getState(row, col);
-            if (state != null) {
-                if (state == State.BLACK) {
+            
+            if (board.occupied(row, col)!=1) {
+                if (board.occupied(row,col) == 2) {
                     g2.setColor(Color.BLACK);
                 } else {
                     g2.setColor(Color.WHITE);

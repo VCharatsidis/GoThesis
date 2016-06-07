@@ -8,29 +8,35 @@ public class BitBoard {
 	this.height = height;
 	this.width = width;
 	blackToplay=true;
+	moveNumber =0;
 	size = height*width;
+	neighbors = new long[height*width];
 	for(int i=0;i<height;i++){
 		for(int j=0;j<width;j++){
-			neighbors[i+j]=mask(i,j);
+			neighbors[i*width+j]=mask(i,j);
 		}
 		
 	}
 	}
+	public boolean getTurn(){
+		return blackToplay;
+	}
+	private int moveNumber;
+	private long checked;
 	private boolean blackToplay;
 	private int height;
 	private int width;
 	private int size;
-	private long blackTwoMovesAgo;
-	private long whiteTwoMovesAgo;
+	private long blackTwoMovesAgo=-1L;
+	private long whiteTwoMovesAgo=-1L;
 	
 	
-	private long whitepieces;
-	private long blackpieces;
+	private long whitepieces=0;
+	private long blackpieces=0;
 	private long[] neighbors;
 	
 	public long board(){
-		
-		 return whitepieces |= blackpieces;
+		 return whitepieces | blackpieces;
 	}
 	public int[] squareToRowCol(int square){
 		int[] rowcol={0,0};
@@ -51,11 +57,11 @@ public class BitBoard {
 		return 1L<<square;
 	}
 	public boolean liberties(int row , int col ){
-		return (neighbors[row+col] & emptySquares())!=0;
+		return (neighbors[row*width+col] & emptySquares()) !=0;
 	}
 	
 	public long mask(int row ,int col){
-		long north=1<<size,south=1<<size,east=1<<size,west=1<<size;
+		long north=0,south=0,east=0,west=0;
 		if (row > 0) {
 			south = getBite(getSquare(row-1,col));
 	    }
@@ -70,126 +76,227 @@ public class BitBoard {
 	    }
 	    return north |= south |= west |= east;
 	}
+	public int occupied(int row,int col){
+		long intersection = getBite(getSquare(row,col));
+		if ((intersection | emptySquares() )== emptySquares()){
+			
+			return 1;
+		}
+		else if((intersection | blackpieces)==blackpieces){
+			
+			return 2;
+		}
+		return 3;
+	}
 	
 	public int longToSquare(long l){
-		return Long.numberOfTrailingZeros(l)+1;
+		return Long.numberOfTrailingZeros(l);
 	}
-	
-	private boolean checkForChainLibs(int row,int col,boolean black){
-		long checkedBlackNeighbors=0;
-		long checkedWhiteNeighbors=0;
-		long blackNeighbors = (neighbors[row+col] & blackpieces);
-		long whiteNeighbors = (neighbors[row+col] & whitepieces);
-		if (black)
-			return (checkForBlackNeighborLibs(row,col,black,checkedBlackNeighbors,blackNeighbors) || (checkForWhiteNeighborLibs(row,col,black,checkedWhiteNeighbors,whiteNeighbors)));
-		else
-			return !(checkForBlackNeighborLibs(row,col,black,checkedBlackNeighbors,blackNeighbors) || (checkForWhiteNeighborLibs(row,col,black,checkedWhiteNeighbors,whiteNeighbors)));
+	boolean checkForWhiteChainLibs(int row , int col ,long stone){
+		System.out.println("i check for white chains liberties " + row + " " + col);
+		if (liberties(row,col))
+			return true;
+		checked|=stone;
+		int [] coords;
+		long highestBit;
+		System.out.println("checked inside checkForWhiteLibs= "+Long.toBinaryString(checked));
+		long whiteNeighbors = (neighbors[row*width+col] & whitepieces);
+		if(whiteNeighbors==0){
+			
+			return false;
+		}
+		whiteNeighbors = whiteNeighbors & ~checked;
+		System.out.println(Long.toBinaryString(whiteNeighbors));
+		long testneighbors=whiteNeighbors;
+		while (testneighbors !=0){
+			long testBit = Long.highestOneBit(testneighbors);
+			coords = highestBitToCoords(testBit);
+			testneighbors= testneighbors & ~ testBit;
+			System.out.println("not checked neighbors of stone= "+ coords[0]+ " "+coords[1]);
+		}
+		while (whiteNeighbors !=0){
+				
+				//getting the first neighbor
+				highestBit = Long.highestOneBit(whiteNeighbors);
+				coords = highestBitToCoords(highestBit);
+				whiteNeighbors= whiteNeighbors & ~highestBit;
+				if(liberties(coords[0],coords[1])){
+					return true;
+				}
+				if(	checkForWhiteChainLibs(coords[0],coords[1],highestBit)) {
+					return true;
+				}
+							
+		}
+		checked |=stone;
+		return false;
+	}
+	public void checkForOpponentsLibs(int row,int col,long stone){
+		System.out.println("i check for OPPONENTS LIBS");
+		long highestBit;
+		long whiteneighbors = (neighbors[row*width+col] & whitepieces);
+		long blackneighbors = (neighbors[row*width+col] & blackpieces);
+		int [] coords;
+		if (blackToplay){
+			for (int i=0;i<4;i++){
+				highestBit = Long.highestOneBit(whiteneighbors);
+				if (whiteneighbors==0)
+					continue;
+				coords = highestBitToCoords(highestBit);
+				System.out.println("highestBit= "+Long.toBinaryString(highestBit));
+				whiteneighbors ^= highestBit;
+				System.out.println("whiteneighbors= "+Long.toBinaryString(whiteneighbors));
+				checked=0;
+				if (!checkForWhiteChainLibs(coords[0],coords[1],highestBit)){
+					System.out.println("BEFORE REMOVING white checked stones");
+					removeStones(checked);
+				}
+				
+			}
+		}
+		else {
+			for (int i=0;i<4;i++){
+				highestBit = Long.highestOneBit(blackneighbors);
+				if ( blackneighbors==0){
+					continue;
+				}
+				coords = highestBitToCoords(highestBit);
+				blackneighbors ^= highestBit;
+				checked=0;
+				if (!checkForBlackChainLibs(coords[0],coords[1],highestBit)){
+					System.out.println("before removing black checked stones");
+					removeStones(checked);
+				}
+			}
+		}
 		
 	}
+	
+	
+	boolean checkForBlackChainLibs(int row,int col,long stone){
+		System.out.println("i check for black chains liberties " + row +" "+ col) ;
+		if (liberties(row,col))
+			return true;
+		// the two lines that follow gives black and white neighbs of that move.
+		long blackNeighbors = (neighbors[row*width+col] & blackpieces);
+		System.out.println("blackNeighbors= "+Long.toBinaryString(blackNeighbors));
+		System.out.println("checked= "+Long.toBinaryString(checked));
+		int [] coords;
+		long highestBit;
+		// we count liberties of black and white neighbors of that square
+		
+			//we isolate white neighbors .
+			if (blackNeighbors==0){
+				checked |=stone;
+				return false;
+			}
+			while ((blackNeighbors | checked) != checked){
+				highestBit = Long.highestOneBit(blackNeighbors);
+				coords = highestBitToCoords(highestBit);
+				
+				if(liberties(coords[0],coords[1])){
+					return true;
+				}
+				checked |= highestBit;
+				checkForBlackChainLibs(coords[0],coords[1],highestBit);
+			}
+		
+			return false;	
+	}
+	
 	public int[] highestBitToCoords(long highestBit){
 		int square =longToSquare(highestBit);
 		int[] coords = squareToRowCol(square);
 		return coords;
 	}
-	public boolean checkForWhiteNeighborLibs(int row,int col,boolean black , long checkedWhiteNeighbors,long whiteNeighbors){
-		int [] coords;
-		long highestBit;
-		while(whiteNeighbors!=0){
-			highestBit = Long.highestOneBit(whiteNeighbors);
-			coords = highestBitToCoords(highestBit);
-			if(liberties(coords[0],coords[1]))
-				return false;
-			if ((checkedWhiteNeighbors |= highestBit)!=checkedWhiteNeighbors){
-				checkedWhiteNeighbors = checkedWhiteNeighbors |= highestBit;
-				whiteNeighbors = (neighbors[coords[0]+coords[1]] & whitepieces);
-				checkForWhiteNeighborLibs(coords[0],coords[1],black,checkedWhiteNeighbors,whiteNeighbors);
-			}
-		}				
-		return false;
-	}
-	public boolean checkForBlackNeighborLibs(int row, int col,boolean black,long checkedBlackNeighbors ,long blackNeighbors){
-		int [] coords;
-		long highestBit;
-		if (black){
-			
-			
-			while (blackNeighbors!=0){
-				
-				//getting the first neighbor
-				highestBit = Long.highestOneBit(blackNeighbors);
-				coords = highestBitToCoords(highestBit);
-				//checking if neighbor black pieces have libs
-				if(liberties(coords[0],coords[1]))
-					return true;
-				
-				//cehck if neighbor black belongs to a chain with libs recursively if not checked
-				// if checkedNeighbors |= highestBit == checkedNeighbors , means that highestBit has been explored
-				if ((checkedBlackNeighbors |= highestBit)!=checkedBlackNeighbors){
-						checkedBlackNeighbors = checkedBlackNeighbors |= highestBit;
-						blackNeighbors = (neighbors[coords[0]+coords[1]] & blackpieces);
-						
-						checkForBlackNeighborLibs(coords[0],coords[1],black,checkedBlackNeighbors,blackNeighbors);
-					 
-				}
-				else{
-					// if highestBit has been explored i remove it and call the method again without it on black neighbors
-					blackNeighbors = blackNeighbors ^= highestBit;
-					highestBit = Long.highestOneBit(blackNeighbors);
-					coords = highestBitToCoords(highestBit);
-					checkForBlackNeighborLibs(coords[0],coords[1],black,checkedBlackNeighbors,blackNeighbors);
-				}
-				
-			}
-			// check if we kill a whit stone		
-		    
-			
-			
-		return true;
-		}
-	return false;
-		}
-	
-	
-	public boolean isLegal(int row ,int col, boolean black){
-		if(black){
-			if (blackTwoMovesAgo==board())
-				return false;
-		}
-		else{
-			if(whiteTwoMovesAgo==board())
-				return false;
-		}
-		if (liberties(row,col))
+
+	public boolean isLegal(int row ,int col){
+		checked = 0;
+		checkForOpponentsLibs(row,col,getBite(getSquare(row,col)));
+		System.out.println("check if legal");
+		
+		if (liberties(row,col)){
 			return true;
-		return checkForChainLibs(row,col,black);
+		}
+			
+		//checking for ko
+		if(blackToplay){
+			if(blackTwoMovesAgo==board()){
+				System.out.println("not legal ko for black");
+				return false;
+			}
+			return checkForBlackChainLibs(row,col,getBite(getSquare(row,col)));
+		}
+		else
+			if ((whiteTwoMovesAgo==board())){
+				System.out.println("not legal ko for white");
+				return false;
+			}
+			return checkForWhiteChainLibs(row,col,getBite(getSquare(row,col)));
+
 	}
-	public void removeStone(long newStone,boolean black){
-		if (black){
-			newStone ^= blackpieces;
+	
+	public void removeStones(long checked){
+		System.out.println("remove stones");
+		if (blackToplay){
+			System.out.println("whitepiece before removal= "+Long.toBinaryString(whitepieces));
+			System.out.println("checked= "+Long.toBinaryString(this.checked));
+			whitepieces ^= this.checked;
+			this.checked=0;
+			System.out.println("whitepieces after removal= "+Long.toBinaryString(whitepieces));
 		}
 		else{
-			newStone ^= whitepieces;
+			blackpieces ^= this.checked;
+			this.checked=0;
 		}
 	}
 	
-	public void addStone(int row, int col,boolean black){
+	public void countLiberties(int row ,int col){
+		System.out.println("liberties of the played stone are=  "+ Long.toBinaryString(neighbors[row*width+col] & emptySquares()));
+		int [] coords = highestBitToCoords(neighbors[row*width+col] & emptySquares());
+		System.out.println(coords[0]+""+coords[1]);
+	}
+	
+	public void addStone(int row, int col){
+		if (occupied(row,col)!=1){
+			System.out.println("occupied");
+			return ;	
+		}
+		long whitepiecesB = whitepieces;
+		long blackpiecesB = blackpieces;
+		long blackTwoMovesAgoB = blackTwoMovesAgo;
+		long whiteTwoMovesAgoB = whiteTwoMovesAgo;
+		
+		System.out.println("Time to add stone");
 		long newStone = getBite(getSquare(row,col)) ;
-		if (black){
-			newStone |= blackpieces;
+		if (blackToplay){
+			blackTwoMovesAgo = board();
+			blackpieces |= newStone;	
 		}
 		else {
-			newStone |= whitepieces;
+			System.out.println("i save board for white");
+			whiteTwoMovesAgo = board();
+			whitepieces |= newStone ;
 		}
-		
-		if (!isLegal(row,col,black)){
-			removeStone(newStone,black);
+		if (!isLegal(row,col)){
+			System.out.println("ILEGAL MOVE");
+			removeStones(newStone);
+			blackTwoMovesAgo = blackTwoMovesAgoB;
+			whiteTwoMovesAgo = whiteTwoMovesAgoB;
+			whitepieces=whitepiecesB;
+			blackpieces=blackpiecesB;
+			return;
 		}
-		else{
-			if(black)
-				blackTwoMovesAgo = board();
-			else
-				whiteTwoMovesAgo = board();
-		}
+		System.out.println("coords of new move are= "+row+""+col);
+	
+		board();
+		countLiberties(row,col);
+		System.out.println("blackpieces are= "+Long.toBinaryString(blackpieces));
+		System.out.println("whitepieces are= "+Long.toBinaryString(whitepieces));
+		System.out.println("board is= "+Long.toBinaryString(board()));
+		blackToplay = !blackToplay;
+		moveNumber+=1;
+		System.out.println("MOVE "+moveNumber);	
 		
 	}
 	
