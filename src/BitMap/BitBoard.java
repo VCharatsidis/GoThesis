@@ -1,15 +1,30 @@
 package BitMap;
 
+import lombok.Getter;
+
 	
-	
+@Getter
 public class BitBoard {
+
+	private int moveNumber;
+	private long checked;
+	private boolean blackToplay;
+	private int height;
+	private int width;
+	
+	private long blackTwoMovesAgo = -1L;
+	private long whiteTwoMovesAgo = -1L;
+	private long lastMove;
+
+	private long whitepieces = 0;
+	private long blackpieces = 0;
+	private long[] neighbors;
 	
 	public BitBoard(int height ,int width){
 	this.height = height;
 	this.width = width;
 	blackToplay=true;
 	moveNumber =0;
-	size = height*width;
 	neighbors = new long[height*width];
 	for(int i=0;i<height;i++){
 		for(int j=0;j<width;j++){
@@ -18,25 +33,59 @@ public class BitBoard {
 		
 	}
 	}
+
+	public BitBoard(boolean blackToplay, long blackpieces, long whitepieces,
+			long blackTwoMovesAgo, long whiteTwoMovesAgo, long lastMove,
+			long[] neighbors, int height, int width) {
+		this.blackToplay = blackToplay;
+		this.blackpieces = blackpieces;
+		this.whitepieces = whitepieces;
+		this.blackTwoMovesAgo = blackTwoMovesAgo;
+		this.whiteTwoMovesAgo = whiteTwoMovesAgo;
+		this.lastMove = lastMove;
+		this.neighbors = neighbors;
+		this.height = height;
+		this.width = width;
+	}
+
+	public BitBoard(BitBoard other) {
+		this.blackToplay = other.blackToplay;
+		this.blackpieces = other.blackpieces;
+		this.whitepieces = other.whitepieces;
+		this.blackTwoMovesAgo = other.blackTwoMovesAgo;
+		this.whiteTwoMovesAgo = other.whiteTwoMovesAgo;
+		this.lastMove = other.lastMove;
+		this.neighbors = other.neighbors;
+		this.height = other.height;
+		this.width = other.width;
+	}
+
 	public boolean getTurn(){
 		return blackToplay;
 	}
-	private int moveNumber;
-	private long checked;
-	private boolean blackToplay;
-	private int height;
-	private int width;
-	private int size;
-	private long blackTwoMovesAgo=-1L;
-	private long whiteTwoMovesAgo=-1L;
 	
 	
-	private long whitepieces=0;
-	private long blackpieces=0;
-	private long[] neighbors;
-	
+
+	public long getLastMove(){
+		return lastMove;
+	}
+	public long[] getNeighbors(){
+		return neighbors;
+	}
+	public long getBlackpieces(){
+		return blackpieces;
+	}
+	public long getWhitepieces(){
+		return whitepieces;
+	}
 	public long board(){
 		 return whitepieces | blackpieces;
+	}
+	public int getWidth(){
+		return width;
+	}
+	public int getHeight(){
+		return height;
 	}
 	public int[] squareToRowCol(int square){
 		int[] rowcol={0,0};
@@ -92,6 +141,7 @@ public class BitBoard {
 	public int longToSquare(long l){
 		return Long.numberOfTrailingZeros(l);
 	}
+	
 	boolean checkForWhiteChainLibs(int row , int col ,long stone){
 		System.out.println("i check for white chains liberties " + row + " " + col);
 		if (liberties(row,col))
@@ -128,8 +178,6 @@ public class BitBoard {
 				if(	checkForWhiteChainLibs(coords[0],coords[1],highestBit)) {
 					return true;
 				}
-		
-			
 							
 		}
 		
@@ -210,10 +258,7 @@ public class BitBoard {
 			if(	checkForBlackChainLibs(coords[0],coords[1],highestBit)) {
 				return true;
 			}
-			
-	
 		}
-		
 		return false;	
 	}
 	
@@ -310,6 +355,8 @@ public class BitBoard {
 			return;
 		}
 		System.out.println("coords of new move are= "+row+""+col);
+		
+		lastMove = newStone;
 	
 		board();
 		countLiberties(row,col);

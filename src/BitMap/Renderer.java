@@ -49,11 +49,13 @@ private int width=7;
 private boolean current_player;
 private BitBoard board;
 private Point lastMove;
+private Influence inf;
+
 
 public Renderer(BitBoard board) {
 	this.board = board;
     this.setBackground(Color.ORANGE);
-    
+    inf =  new Influence(board);
     // Black always starts
     current_player = this.board.getTurn();
     
@@ -84,10 +86,13 @@ private class Mouse extends MouseAdapter{
         //lastMove was after board.addStone
        
         board.addStone(row, col);
+        inf.printer();
         lastMove = new Point(col, row);
         current_player =board.getTurn();
         // Switch current player
         repaint();
+
+        
         
         
     }
