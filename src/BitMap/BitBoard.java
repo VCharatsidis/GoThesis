@@ -16,8 +16,9 @@ public class BitBoard {
 	private long whiteTwoMovesAgo = -1L;
 	private long lastMove;
 
-	private long whitepieces = 0;
-	private long blackpieces = 0;
+	private long whitepieces;
+	private long blackpieces;
+	private int passCounter;
 	private long[] neighbors;
 	
 	public BitBoard(int height ,int width){
@@ -25,6 +26,8 @@ public class BitBoard {
 	this.width = width;
 	blackToplay=true;
 	moveNumber =0;
+		whitepieces = 0;
+		blackpieces = 0;
 	neighbors = new long[height*width];
 	for(int i=0;i<height;i++){
 		for(int j=0;j<width;j++){
@@ -36,7 +39,7 @@ public class BitBoard {
 
 	public BitBoard(boolean blackToplay, long blackpieces, long whitepieces,
 			long blackTwoMovesAgo, long whiteTwoMovesAgo, long lastMove,
-			long[] neighbors, int height, int width) {
+			long[] neighbors, int height, int width, int passCounter) {
 		this.blackToplay = blackToplay;
 		this.blackpieces = blackpieces;
 		this.whitepieces = whitepieces;
@@ -46,6 +49,7 @@ public class BitBoard {
 		this.neighbors = neighbors;
 		this.height = height;
 		this.width = width;
+		this.passCounter = passCounter;
 	}
 
 	public BitBoard(BitBoard other) {
@@ -58,13 +62,16 @@ public class BitBoard {
 		this.neighbors = other.neighbors;
 		this.height = other.height;
 		this.width = other.width;
+		this.passCounter = other.passCounter;
+	}
+
+	public boolean isGameOver() {
+		return passCounter == 2;
 	}
 
 	public boolean getTurn(){
 		return blackToplay;
 	}
-	
-	
 
 	public long getLastMove(){
 		return lastMove;
@@ -323,6 +330,11 @@ public class BitBoard {
 		System.out.println(coords[0]+""+coords[1]);
 	}
 	
+	public void pass() {
+		blackToplay = !blackToplay;
+		passCounter++;
+	}
+
 	public void addStone(int row, int col){
 		if (occupied(row,col)!=1){
 			System.out.println("occupied");

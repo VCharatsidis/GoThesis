@@ -1,10 +1,11 @@
 package minimax;
 
+import lombok.Getter;
 import BitMap.BitBoard;
 import ai.game_abstractions.GameState;
 
 public class GoState extends GameState {
-	
+	@Getter
 	private BitBoard board ;
 	
 	public GoState (BitBoard board){
