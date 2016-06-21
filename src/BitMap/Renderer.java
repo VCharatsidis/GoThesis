@@ -7,12 +7,21 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
+import minimax.GoEvaluation;
+import minimax.GoMiniMaxPlayer;
+import minimax.GoMove;
+import minimax.GoPrisonersEval;
+import minimax.GoState;
+
+import com.sun.glass.events.KeyEvent;
 
 /**
   * Provides I/O.
@@ -50,19 +59,70 @@ private boolean current_player;
 private BitBoard board;
 private Point lastMove;
 private Influence inf;
+	private GoState state;
+	private GoEvaluation eval;
+	private GoMiniMaxPlayer player;
+	private GoPrisonersEval eval2;
 
 
 public Renderer(BitBoard board) {
 	this.board = board;
     this.setBackground(Color.ORANGE);
     inf =  new Influence(board);
+		state = new GoState(board);
+		eval = new GoEvaluation();
+		// eval2 = new GoPrisonersEval();
+		// player = new GoMiniMaxPlayer(60, eval);
+		player = new GoMiniMaxPlayer(800, eval);
     // Black always starts
     current_player = this.board.getTurn();
-    
+		setFocusable(true);
+		addListener1();
+		addListener();
+	}
 
-    addListener(board);
+	private class Keyboard implements KeyListener {
+
+		@Override
+		public void keyTyped(java.awt.event.KeyEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void keyPressed(java.awt.event.KeyEvent e) {
+
+
+			if (e.getKeyCode() == KeyEvent.VK_Y) {
+				GoMove bestmove = player.play(state).getRight();
+				int col = bestmove.getCol();
+				int row = bestmove.getRow();
+				if (col != -1 & row != -1) {
+
+					board.addStone(row, col);
+					lastMove = new Point(col, row);
+					current_player = board.getTurn();
+					inf.printer();
+					repaint();
+				} else {
+					System.out.println("pass!");
+					board.pass();
+
+					current_player = board.getTurn();
+
+					repaint();
+				}
+			}
+
+		}
+
+		@Override
+		public void keyReleased(java.awt.event.KeyEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
 }
-
 private class Mouse extends MouseAdapter{
 	@Override
     
@@ -84,11 +144,14 @@ private class Mouse extends MouseAdapter{
         }
            
         //lastMove was after board.addStone
+
+			board.addStone(row, col);
+			lastMove = new Point(col, row);
+			current_player = board.getTurn();
+
+			// inf.printer();
        
-        board.addStone(row, col);
-        inf.printer();
-        lastMove = new Point(col, row);
-        current_player =board.getTurn();
+
         // Switch current player
         repaint();
 
@@ -116,9 +179,14 @@ public static void drawBoard(BitBoard board){
     f.setResizable(false);
     f.setLocationByPlatform(true);
     f.setVisible(true);
+		f.setFocusable(true);
 }
 
-private void addListener(BitBoard board) {
+	private void addListener1() {
+		addKeyListener(new Keyboard());
+	}
+
+	private void addListener() {
 	addMouseListener(new Mouse());
 }
 

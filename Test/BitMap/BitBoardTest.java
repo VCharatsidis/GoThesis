@@ -37,13 +37,7 @@ public class BitBoardTest {
 		board.addStone(3,4);
 		board.addStone(2,6);
 		board.addStone(4,5);
-		Renderer.drawBoard(board);
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 		assertEquals(false,board.liberties(4, 4));
 	}
 	@Test
@@ -56,14 +50,8 @@ public class BitBoardTest {
 		board.addStone(3,4);
 		board.addStone(2,6);
 		board.addStone(4,5);
-		Renderer.drawBoard(board);
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	
+
 	}
 	@Test
 	public void longToSquare(){
@@ -72,6 +60,77 @@ public class BitBoardTest {
 		
 		
 	}
+
+	@Test
+	public void captives() {
+		board.addStone(0, 0);
+		board.addStone(0, 1);
+		board.addStone(1, 0);
+		board.addStone(1, 1);
+		board.addStone(3, 3);
+		board.addStone(2, 0);
+
+		assertEquals(2, board.getBlackCaptives());
+	}
+
+	@Test
+	public void koCheck() {
+		board.addStone(0, 0);
+		board.addStone(0, 1);
+		board.addStone(1, 1);
+		board.addStone(1, 0);
+		board.addStone(0, 2);
+		board.addStone(3, 3);
+		board.addStone(0, 0);
+
+
+		assertTrue(board.koCheck());
+
+	}
+
+	@Test
+	public void equalsTest1() {
+		board.addStone(0, 1);
+		board.addStone(1, 1);
+
+		board.addStone(1, 0);
+		board.addStone(0, 2);
+
+		board.addStone(4, 4);
+		board.addStone(0, 0);
+
+		board.addStone(5, 5);
+		board.addStone(6, 6);
+
+
+
+		BitBoard board2 = new BitBoard(7, 7);
+
+		board2.addStone(0, 1);
+		board2.addStone(1, 1);
+
+		board2.addStone(1, 0);
+		board2.addStone(0, 2);
+
+		board2.addStone(5, 5);
+		board2.addStone(6, 6);
+
+		board2.addStone(4, 4);
+		board2.addStone(0, 0);
+
+		Renderer.drawBoard(board);
+
+		Renderer.drawBoard(board2);
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		assertFalse(board.equals(board2));
+		assertEquals(board.hashCode(), board2.hashCode());
+	}
 	
-	
+
 }

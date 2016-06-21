@@ -36,6 +36,8 @@ private void init() {
     int height=7;
     int width=7;
     BitBoard startingboard = new BitBoard(height,width);
+
+
   
     Renderer board = new Renderer(startingboard);
     container.add(board);
