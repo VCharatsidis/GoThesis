@@ -148,6 +148,14 @@ public class BitBoard {
 	    }
 	    return north |= south |= west |= east;
 	}
+
+
+	public boolean isWithinBounds(int row, int col) {
+		if ((row >= 0 && row <= height - 1) && (col >= 0 && col <= width - 1)) {
+			return true;
+		}
+		return false;
+	}
 	public int occupied(int row,int col){
 		long intersection = getBite(getSquare(row,col));
 		if ((intersection | emptySquares() )== emptySquares()){
@@ -311,6 +319,15 @@ public class BitBoard {
 			return true;
 	}
 
+	public boolean neibWithLastMove(int row, int col) {
+		long diagonal = cutNeighbs(getBite(getSquare(row, col)));
+		long adjacent = neighbors[row * width + col];
+		if (((diagonal & lastMove) == 0) && ((adjacent & lastMove) == 0))
+			return false;
+
+		return true;
+	}
+
 	public boolean adjacentNeighbour(int row, int col) {
 		long adjacent = neighbors[row * width + col];
 		if (blackToplay)
@@ -341,8 +358,9 @@ public class BitBoard {
 		long diagonal = cutNeighbs(getBite(getSquare(row, col)));
 		long adjacent = neighbors[row * width + col];
 
-		if (moveNumber > 1)
+		if (moveNumber > 1 && moveNumber < 15)
 			if (!(diagonalNeighbour(row, col) | adjacentNeighbour(row, col)))
+				// if (!neibWithLastMove(row, col))
 				return false;
 			
 		int whiteCaptivesB = whiteCaptives;

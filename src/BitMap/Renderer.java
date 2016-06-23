@@ -102,6 +102,7 @@ public Renderer(BitBoard board) {
 					board.addStone(row, col);
 					lastMove = new Point(col, row);
 					current_player = board.getTurn();
+
 					inf.printer();
 					repaint();
 				} else {

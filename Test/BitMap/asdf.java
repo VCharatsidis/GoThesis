@@ -8,9 +8,14 @@ public class asdf {
 
 		// board.addStone(1, 1);
 		board.addStone(3, 3);
-		// board.addStone(2, 2);
+		board.pass();
+		board.addStone(2, 3);
+		board.pass();
+		board.addStone(1, 3);
+		board.pass();
+		board.addStone(3, 4);
 
-		// board.addStone(2, 3);
+		//board.addStone(2, 3);
 		// board.addStone(3, 2);
 
 		// board.addStone(2, 4);
