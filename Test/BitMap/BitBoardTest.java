@@ -69,8 +69,17 @@ public class BitBoardTest {
 		board.addStone(1, 1);
 		board.addStone(3, 3);
 		board.addStone(2, 0);
-
-		assertEquals(2, board.getBlackCaptives());
+		board.addStone(2, 1);
+		board.pass();
+		board.addStone(3, 0);
+		Renderer.drawBoard(board);
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		assertEquals(3, board.getBlackCaptives());
 	}
 
 	@Test
@@ -118,15 +127,10 @@ public class BitBoardTest {
 		board2.addStone(4, 4);
 		board2.addStone(0, 0);
 
-		Renderer.drawBoard(board);
+		// Renderer.drawBoard(board);
 
-		Renderer.drawBoard(board2);
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// Renderer.drawBoard(board2);
+
 
 		assertFalse(board.equals(board2));
 		assertEquals(board.hashCode(), board2.hashCode());

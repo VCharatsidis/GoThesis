@@ -10,14 +10,19 @@ public class Influence {
 		this.height = board.getHeight();
 		modified = new boolean[width * height];
 		Arrays.fill(modified, false);
-
+		blackInf = new int[width * height];
+		whiteInf = new int[width * height];
 		influence = new int[width * height];
 		Arrays.fill(influence, 0);
+		Arrays.fill(blackInf, 0);
+		Arrays.fill(whiteInf, 0);
 		bonus = new boolean[width * height];
 		Arrays.fill(bonus, true);
 
 	}
 
+	private int[] blackInf;
+	private int[] whiteInf;
 	private boolean[] bonus;
 	private Compass comp;
 	private BitBoard board;
@@ -56,18 +61,19 @@ public class Influence {
 
 	public void propagateInf(int row, int col) {
 
-
+		if (modified[row * width + col])
+			return;
 
 		int full = 20;
 		int inf = absInf(row, col);
 		int adjacent = 0;
 		int diagonal = 0;
-		int cap = 0;
+
 
 		if (checkIfFull(row, col, inf, full) == 3000) {
 			return;
 		} else {
-			adjacent = checkIfFull(row, col, inf, full);
+			adjacent = (int) (Math.round(checkIfFull(row, col, inf, full) / 2));
 			diagonal = (int) (Math.round(adjacent * 0.75));
 
 		}
@@ -77,43 +83,64 @@ public class Influence {
 			diagonal = -diagonal;
 		}
 
+		transformPropagate(row - 1, col - 1, diagonal, row, col);
+		transformPropagate(row - 1, col, adjacent, row, col);
+		transformPropagate(row - 1, col + 1, diagonal, row, col);
 
-		transformPropagate(row - 1, col - 1, diagonal);
-		transformPropagate(row - 1, col, adjacent);
-		transformPropagate(row - 1, col + 1, diagonal);
+		transformPropagate(row, col - 1, adjacent, row, col);
+		transformPropagate(row, col + 1, adjacent, row, col);
 
-		transformPropagate(row, col - 1, adjacent);
-		transformPropagate(row, col + 1, adjacent);
+		transformPropagate(row + 1, col - 1, diagonal, row, col);
+		transformPropagate(row + 1, col, adjacent, row, col);
+		transformPropagate(row + 1, col + 1, diagonal, row, col);
 
-		transformPropagate(row + 1, col - 1, diagonal);
-		transformPropagate(row + 1, col, adjacent);
-		transformPropagate(row + 1, col + 1, diagonal);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				influence[i * width + j] += blackInf[i * width + j]
+						+ whiteInf[i * width + j];
+			}
+		}
 
 	}
 
 	public void modify(int row, int col) {
-		modified[row * width + col] = true;
+		modified[row * width + col] = !modified[row * width + col];
 	}
 
-	public void transformPropagate(int row, int col, int increment) {
+	public void transformPropagate(int row, int col, int increment,
+			int rootRow, int rootCol) {
+
+
 		if (!board.isWithinBounds(row, col)) {
 			// System.out.println("out of bounds");
 			return;
 		}
-		if (modified[row * width + col] == true) {
-			// System.out.println("modified");
-			return;
+		if (influence[row * width + col] > 0
+				&& influence[rootRow * width + rootCol] > 0) {
+			if (influence[row * width + col] > influence[rootRow * width
+					+ rootCol])
+				return;
 		}
+		if (influence[row * width + col] < 0
+				&& influence[rootRow * width + rootCol] < 0)
+			if (influence[row * width + col] < influence[rootRow * width
+					+ rootCol])
+				return;
+
 		if (occupied(row, col) != 1) {
 			// System.out.println("occupied");
 			influence[row * width + col] = 0;
 			return;
 		}
+		if (influence[row * width + col] < 0)
+			whiteInf[row * width + col] = whiteInf[row * width + col]
+					+ increment;
+		else
+			blackInf[row * width + col] = blackInf[row * width + col]
+					+ increment;
 
-		influence[row * width + col] = influence[row * width + col] + increment;
 		// System.out.println("for row =  " + row + " for col = " + col
 		// + " the influences is " + influence[row * width + col]);
-
 	}
 
 	public void transform(int row, int col, int increment) {
@@ -125,7 +152,7 @@ public class Influence {
 		} else {
 
 			influence[row * width + col] = inf + increment;
-			modify(row, col);
+
 			/*
 			 * check if someone territory if ((influence[row * width + col] =
 			 * influence[row * width + col] ) > 60)
@@ -222,10 +249,25 @@ public class Influence {
 	}
 
 	public void printer() {
-
+		long stone;
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
-				long stone = board.getBite(getSquare(i, j));
+				stone = board.getBite(getSquare(i, j));
+
+				if ((stone & board.getBlackpieces()) == stone)
+					System.out.print("B  ");
+				else if ((stone & board.getWhitepieces()) == stone)
+					System.out.print("W  ");
+				else
+					System.out.print("-  ");
+
+			}
+			System.out.println();
+		}
+		System.out.println();
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				stone = board.getBite(getSquare(i, j));
 
 				if ((stone & board.getBlackpieces()) == stone)
 					System.out.print("B  ");
@@ -240,8 +282,21 @@ public class Influence {
 			System.out.println();
 
 		}
+		System.out.println();
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+
+				if (modified[row * width + col] == true)
+					System.out.print("----- ");
+				else
+					System.out.print("False ");
+
+			}
+			System.out.println();
+
+		}
 		// System.out.println(board.getWhiteCaptives());
-		// System.out.println(getAllInfluence());
+		System.out.println("all inf " + getAllInfluence());
 
 	}
 
@@ -288,7 +343,7 @@ public class Influence {
 
 	/** updates the int array influence when a stone is played */
 	public void makeInfluence() {
-		System.out.println("makle");
+
 		everyInfluence = 0;
 
 		Arrays.fill(influence, 0);
@@ -300,8 +355,16 @@ public class Influence {
 				mask(row, col);
 			}
 		}
+		for (int row = 0; row < board.getHeight(); row++) {
+			for (int col = 0; col < board.getWidth(); col++) {
+				if (influence[row * width + col] == 0)
+					modify(row, col);
+			}
+		}
 		// printer();
 		// System.out.println();
+		Arrays.fill(blackInf, 0);
+		Arrays.fill(whiteInf, 0);
 		for (int row = 0; row < board.getHeight(); row++) {
 			for (int col = 0; col < board.getWidth(); col++) {
 				if (board.occupied(row, col) != 1) {
@@ -312,10 +375,18 @@ public class Influence {
 		}
 		for (int row = 0; row < board.getHeight(); row++) {
 			for (int col = 0; col < board.getWidth(); col++) {
-				if (influence[row * width + col] != 0)
-					modified[row * width + col] = true;
+				modified[row * width + col] = !modified[row * width + col];
+
 			}
 		}
+		for (int row = 0; row < board.getHeight(); row++) {
+			for (int col = 0; col < board.getWidth(); col++) {
+				if (influence[row * width + col] == 0)
+					modify(row, col);
+			}
+		}
+		Arrays.fill(blackInf, 0);
+		Arrays.fill(whiteInf, 0);
 		for (int row = 0; row < board.getHeight(); row++) {
 			for (int col = 0; col < board.getWidth(); col++) {
 

@@ -25,6 +25,8 @@ public class BitBoard {
 	private int blackCaptives;
 	private int whiteCaptives;
 	
+	private boolean Ai;
+
 	public BitBoard(int height ,int width){
 	this.height = height;
 	this.width = width;
@@ -41,6 +43,7 @@ public class BitBoard {
 		}
 		
 	}
+		AiMode();
 	}
 
 	public BitBoard(boolean blackToplay, long blackpieces, long whitepieces,
@@ -293,8 +296,6 @@ public class BitBoard {
 
 		long northWest = 0, northEast = 0, southWest = 0, southEast = 0;
 
-
-		
 				northWest = highestBit << 8;
 
 				southWest = highestBit >> 6;
@@ -341,6 +342,9 @@ public class BitBoard {
 			return true;
 	}
 
+	public void AiMode() {
+		Ai = true;
+	}
 	public boolean isLegal(int row ,int col){
 
 		if (occupied(row, col) != 1) {
@@ -358,10 +362,11 @@ public class BitBoard {
 		long diagonal = cutNeighbs(getBite(getSquare(row, col)));
 		long adjacent = neighbors[row * width + col];
 
-		if (moveNumber > 1 && moveNumber < 15)
-			if (!(diagonalNeighbour(row, col) | adjacentNeighbour(row, col)))
-				// if (!neibWithLastMove(row, col))
-				return false;
+		if (moveNumber > 1 && moveNumber < 25)
+				if (!(diagonalNeighbour(row, col) | adjacentNeighbour(row, col)))
+					// if (!neibWithLastMove(row, col))
+					return false;
+
 			
 		int whiteCaptivesB = whiteCaptives;
 		int blackCaptivesB = blackCaptives;
@@ -529,12 +534,12 @@ public class BitBoard {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + blackCaptives;
+		// result = prime * result + blackCaptives;
 		result = prime * result + (blackToplay ? 1231 : 1237);
 		result = prime * result + (int) (blackpieces ^ (blackpieces >>> 32));
 		result = prime * result + height;
 		result = prime * result + passCounter;
-		result = prime * result + whiteCaptives;
+		// result = prime * result + whiteCaptives;
 		result = prime * result + (int) (whitepieces ^ (whitepieces >>> 32));
 		result = prime * result + width;
 		return result;
@@ -549,8 +554,7 @@ public class BitBoard {
 		if (getClass() != obj.getClass())
 			return false;
 		BitBoard other = (BitBoard) obj;
-		if (blackCaptives != other.blackCaptives)
-			return false;
+
 		if (blackToplay != other.blackToplay)
 			return false;
 		if (blackpieces != other.blackpieces)
@@ -559,12 +563,15 @@ public class BitBoard {
 			return false;
 		if (passCounter != other.passCounter)
 			return false;
-		if (whiteCaptives != other.whiteCaptives)
-			return false;
+
 		if (whitepieces != other.whitepieces)
 			return false;
 		if (width != other.width)
 			return false;
+		if ((blackCaptives - whiteCaptives) != other.blackCaptives
+				- other.whiteCaptives)
+			return false;
+
 		if (this.koCheck() || other.koCheck()
 				&& this.lastMove != other.lastMove)
 			return false;
