@@ -548,6 +548,22 @@ public class BitBoard {
 			this.checked=0;
 		}
 	}
+
+	public int countGroupLiberties(long group) {
+		long checked = 0;
+		int liberties = 0;
+		while (group != 0) {
+
+			long highestBit = Long.highestOneBit(group);
+			group ^= highestBit;
+			int[] coords = highestBitToCoords(highestBit);
+			int row = coords[0];
+			int col = coords[1];
+			liberties += countLiberties(row, col);
+		}
+
+		return liberties;
+	}
 	
 	public int countLiberties(int row, int col) {
 
