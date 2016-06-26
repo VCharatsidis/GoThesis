@@ -108,24 +108,20 @@ public class ScoreEstimator {
 		
 		long blackneighbors;
 		long whiteneighbors;
-		System.out.println("blackpieces = "+Long.toBinaryString(blackpieces));
-		System.out.println("whitepieces = "+Long.toBinaryString(whitepieces));
-		System.out.println("highestBit= "+Long.toBinaryString(highestBit));
-		System.out.println("highestBit and blackpieces= "+Long.toBinaryString(highestBit & blackpieces));
-		System.out.println("highestBit and whitepieces= "+Long.toBinaryString(highestBit & whitepieces));
+
 		if ((highestBit | blackpieces) == blackpieces){
 			
 			blackneighbors = allneighbors[coords[0]*width+coords[1]] & blackpieces & ~cutNeighbs(highestBit);
-			System.out.println("blackneighbors inside while of findAgroup= "+Long.toBinaryString(blackneighbors));
+
 			blackneighbors = blackneighbors & ~neighborsChecked;
-			System.out.println("blackneighbors inside while of findAgroup= "+Long.toBinaryString(blackneighbors));
+
 		
 			while (blackneighbors != 0){
 				highestBit = Long.highestOneBit(blackneighbors);
 				neighborsChecked |= highestBit;
 				coords = highestBitToCoords(highestBit);
 				blackneighbors = blackneighbors & ~highestBit;
-				System.out.println("neighborsChecked inside while of findAgroup= "+Long.toBinaryString(neighborsChecked));
+
 				neighborsChecked |= findAgroup(highestBit,neighborsChecked);
 			}
 			
@@ -133,14 +129,14 @@ public class ScoreEstimator {
 		else{
 			whiteneighbors = allneighbors[coords[0]*width+coords[1]] & whitepieces & ~cutNeighbs(highestBit);
 			whiteneighbors = whiteneighbors & ~neighborsChecked;
-			System.out.println("whiteneighbors inside while of findAgroup= "+Long.toBinaryString(whiteneighbors));
 			
+
 			while (whiteneighbors != 0){
 				highestBit = Long.highestOneBit(whiteneighbors);
 				neighborsChecked|= highestBit;
 				coords = highestBitToCoords(highestBit);
 				whiteneighbors = whiteneighbors & ~highestBit;
-				System.out.println("neighborsChecked inside while of findAgroup= "+Long.toBinaryString(neighborsChecked));
+
 				neighborsChecked |= findAgroup(highestBit,neighborsChecked);
 			}
 

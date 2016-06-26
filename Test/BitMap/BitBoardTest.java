@@ -71,7 +71,7 @@ public class BitBoardTest {
 		board.addStone(2, 0);
 		board.addStone(2, 1);
 		board.pass();
-		board.addStone(3, 0);
+		// board.addStone(3, 0);
 		Renderer.drawBoard(board);
 		try {
 			Thread.sleep(10000);
@@ -79,7 +79,19 @@ public class BitBoardTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		assertEquals(3, board.getBlackCaptives());
+		// assertEquals(3, board.getBlackCaptives());
+		System.out.println("whitepieces "
+				+ Long.toBinaryString(board.getWhitepieces()));
+		System.out.println("findAgroup "
+				+ Long.toBinaryString(board.findAgroup(
+						Long.highestOneBit(board.getWhitepieces()), 0)));
+		System.out.println("findGroups "
+				+ Long.toBinaryString(board.findWhiteGroups().get(1)));
+		System.out.println("findGroups "
+				+ Long.toBinaryString(board.findWhiteGroups().get(0)));
+		long whitegroup = board.findWhiteGroups().get(0);
+		long blackgroup = board.findBlackGroups().get(0);
+		assertEquals(board.getBlackpieces(), blackgroup);
 	}
 
 	@Test

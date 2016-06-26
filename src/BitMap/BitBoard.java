@@ -1,5 +1,7 @@
 package BitMap;
 
+import java.util.ArrayList;
+
 import lombok.Getter;
 
 	
@@ -342,11 +344,109 @@ public class BitBoard {
 			return true;
 	}
 
+	public ArrayList<Long> findWhiteGroups() {
+		long allchecked = 0;
+		long board = board();
+		ArrayList<Long> groups = new ArrayList<Long>();
+		int groupsindex = 0;
+		while (Long.bitCount(board & ~allchecked) != 0) {
+			long highestBit = Long.highestOneBit(board);
+			board ^= highestBit;
+			if ((highestBit | whitepieces) == whitepieces) {
+
+				allchecked = allchecked | highestBit;
+				long neighborsChecked = 0;
+				groups.add(groupsindex,
+						findAgroup(highestBit, neighborsChecked));
+				allchecked = allchecked
+						| findAgroup(highestBit, neighborsChecked);
+				groupsindex++;
+			} else {
+				continue;
+			}
+
+		}
+		return groups;
+	}
+
+	public ArrayList<Long> findBlackGroups() {
+		long allchecked = 0;
+		long board = board();
+		ArrayList<Long> groups = new ArrayList<Long>();
+		int groupsindex = 0;
+		while (Long.bitCount(board & ~allchecked) != 0) {
+			long highestBit = Long.highestOneBit(board);
+			board ^= highestBit;
+			if ((highestBit | blackpieces) == blackpieces) {
+
+				allchecked = allchecked | highestBit;
+				long neighborsChecked = 0;
+				groups.add(groupsindex,
+						findAgroup(highestBit, neighborsChecked));
+				allchecked = allchecked
+						| findAgroup(highestBit, neighborsChecked);
+				groupsindex++;
+			} else {
+				continue;
+			}
+
+		}
+		return groups;
+	}
+
+	public long findAgroup(long highestBit, long neighborsChecked) {
+
+		int[] coords;
+		coords = highestBitToCoords(highestBit);
+
+		neighborsChecked |= highestBit;
+
+		long blackneighbors;
+		long whiteneighbors;
+
+		if ((highestBit | blackpieces) == blackpieces) {
+
+			blackneighbors = neighbors[coords[0] * width + coords[1]]
+					& blackpieces;
+
+			blackneighbors = blackneighbors & ~neighborsChecked;
+
+			while (blackneighbors != 0) {
+				highestBit = Long.highestOneBit(blackneighbors);
+				neighborsChecked |= highestBit;
+				coords = highestBitToCoords(highestBit);
+				blackneighbors = blackneighbors & ~highestBit;
+
+				neighborsChecked |= findAgroup(highestBit, neighborsChecked);
+			}
+
+		} else {
+			whiteneighbors = neighbors[coords[0] * width + coords[1]]
+					& whitepieces;
+			whiteneighbors = whiteneighbors & ~neighborsChecked;
+
+			while (whiteneighbors != 0) {
+				highestBit = Long.highestOneBit(whiteneighbors);
+				neighborsChecked |= highestBit;
+				coords = highestBitToCoords(highestBit);
+				whiteneighbors = whiteneighbors & ~highestBit;
+
+				neighborsChecked |= findAgroup(highestBit, neighborsChecked);
+			}
+
+		}
+		return neighborsChecked;
+
+	}
+
 	public void AiMode() {
 		Ai = true;
 	}
 	public boolean isLegal(int row ,int col){
-
+		if (!isWithinBounds(row, col)) {
+			// System.out.println("out of bounds");
+			return false;
+		}
 		if (occupied(row, col) != 1) {
 			// System.out.println("occupied");
 			return false;
